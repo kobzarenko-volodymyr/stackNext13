@@ -1,15 +1,14 @@
+import QuestionCard from "@/components/cards/QuestionCard";
+import HomeFilters from "@/components/home/HomeFilters";
+import Filter from "@/components/shared/Filter";
+import NoResult from "@/components/shared/NoResult";
 import LocalSearchbar from "@/components/shared/search/LocalSearchbar";
 import { Button } from "@/components/ui/button";
 import { HomePageFilters } from "@/constants/filters";
-import Filter from "@/components/shared/Filter";
-import Link from "next/link";
-import HomeFilters from "@/components/home/HomeFilters";
-import NoResult from "@/components/shared/NoResult";
-import QuestionCard from "@/components/cards/QuestionCard";
 import { getQuestions } from "@/lib/actions/question.action";
+import Link from "next/link";
 
 export default async function Home() {
-  // OUR SERVER REQUEST
   const result = await getQuestions({});
 
   return (
@@ -23,6 +22,7 @@ export default async function Home() {
           </Button>
         </Link>
       </div>
+
       <div className="mt-11 flex justify-between gap-5 max-sm:flex-col sm:items-center">
         <LocalSearchbar
           route="/"
@@ -54,7 +54,7 @@ export default async function Home() {
               views={question.views}
               answers={question.answers}
               createdAt={question.createdAt}
-            ></QuestionCard>
+            />
           ))
         ) : (
           <NoResult
