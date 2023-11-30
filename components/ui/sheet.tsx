@@ -1,3 +1,4 @@
+/* eslint-disable tailwindcss/no-custom-classname */
 "use client";
 
 import * as React from "react";
@@ -36,7 +37,6 @@ const SheetOverlay = React.forwardRef<
 ));
 SheetOverlay.displayName = SheetPrimitive.Overlay.displayName;
 
-// eslint-disable-next-line tailwindcss/no-custom-classname
 const sheetVariants = cva(
   "bg-background fixed z-50 gap-4 p-6 shadow-lg transition ease-in-out data-[state=closed]:duration-300 data-[state=open]:duration-500 data-[state=open]:animate-in data-[state=closed]:animate-out",
   {
