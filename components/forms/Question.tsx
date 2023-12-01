@@ -25,6 +25,7 @@ import { Badge } from "../ui/badge";
 import { QuestionsSchema } from "@/lib/validations";
 import { createQuestion } from "@/lib/actions/question.action";
 import { useRouter, usePathname } from "next/navigation";
+import { useTheme } from "@/context/ThemeProvider";
 
 /* Кнопка в форме может выступать как в роли "create" так и "edit"
 поэтому ниже в Button мы динамически меняям названия  */
@@ -41,6 +42,8 @@ const Question = ({ mongoUserId }: Props) => {
   const router = useRouter();
   // что бы знать на каком URL мы в данный момент
   const pathname = usePathname();
+
+  const { mode } = useTheme();
 
   // 1. Define your form.
   const form = useForm<z.z.infer<typeof QuestionsSchema>>({
@@ -203,6 +206,8 @@ const Question = ({ mongoUserId }: Props) => {
                       "codesample | bold italic forecolor | alignleft aligncenter |" +
                       "alignright alignjustify | bullist numlist",
                     content_style: "body { font-family:Inter; font-size:16px }",
+                    skin: mode === "dark" ? "oxide-dark" : "oxide",
+                    content_css: mode === "dark" ? "dark" : "light",
                   }}
                 />
               </FormControl>

@@ -3,7 +3,11 @@
 import Question from "@/database/question.model";
 import Tag from "@/database/tag.model";
 import { connectToDatabase } from "../mongoose";
-import { CreateQuestionParams, GetQuestionsParams } from "./shared.types";
+import {
+  CreateQuestionParams,
+  GetQuestionByIdParams,
+  GetQuestionsParams,
+} from "./shared.types";
 import User from "@/database/user.model";
 import { revalidatePath } from "next/cache";
 
@@ -85,4 +89,47 @@ export async function createQuestion(params: CreateQuestionParams) {
     console.log(`${path}, PATH!!!`);
     revalidatePath(path);
   } catch (error) {}
+}
+
+export async function getQuestionById(params: GetQuestionByIdParams) {
+  try {
+    connectToDatabase();
+
+    const { questionId } = params;
+
+    /* .populate(...) используется для заполнения (populate) полей, 
+    содержащих ссылки на другие коллекции. Так как в Базе мы имеем
+    ссылки для отображения правильных данных нам нужно получить
+    эти значение по id
+
+    Этот метод заполняет поле "tags" документа "Question" данными из связанной коллекции "Tag".
+     
+    через select выбираем только то, что нам нужно.
+
+    В файле получим  src={result.author.picture}, 
+    result.tags.map ...
+
+
+    path: "author" указывает на поле "author" в документе "Question".
+    
+    model: User указывает на модель, связанную с полем "author".
+   
+    select: "_id clerkId name picture" определяет, какие поля 
+    (_id, clerkId, name, picture) нужно выбрать из коллекции "User" 
+    для заполнения поля "author" вопроса.
+    */
+
+    const question = await Question.findById(questionId)
+      .populate({ path: "tags", model: Tag, select: "_id name" })
+      .populate({
+        path: "author",
+        model: User,
+        select: "_id clerkId name picture",
+      });
+
+    return question;
+  } catch (error) {
+    console.log(error);
+    throw error;
+  }
 }
