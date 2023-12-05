@@ -5,12 +5,16 @@ import Tag from "@/database/tag.model";
 import { connectToDatabase } from "../mongoose";
 import {
   CreateQuestionParams,
+  DeleteQuestionParams,
+  EditQuestionParams,
   GetQuestionByIdParams,
   GetQuestionsParams,
   QuestionVoteParams,
 } from "./shared.types";
 import User from "@/database/user.model";
 import { revalidatePath } from "next/cache";
+import Answer from "@/database/answer.model";
+import Interaction from "@/database/interaction.model";
 
 export async function getQuestions(params: GetQuestionsParams) {
   try {
@@ -90,6 +94,33 @@ export async function createQuestion(params: CreateQuestionParams) {
     console.log(`${path}, PATH!!!`);
     revalidatePath(path);
   } catch (error) {}
+}
+
+export async function deleteQuestion(params: DeleteQuestionParams) {
+  try {
+    connectToDatabase();
+
+    const { questionId, path } = params;
+
+    // Удалили сам Вопрос
+    await Question.deleteOne({ _id: questionId });
+    // Удалили всё Ответы связанные с этим вопросом
+    await Answer.deleteMany({ question: questionId });
+    // Удалили всё Взаимодействия (просмотры, голосования) связанные с этим вопросом
+    await Interaction.deleteMany({ question: questionId });
+
+    // Обновляет ВСЕ связанные Теги, удаляя ссылки на удаляемый вопрос.
+    await Tag.updateMany(
+      // выбираем ВСЕ Теги у которого в поле questions id нашего вопроса
+      { questions: questionId },
+      // удаляям ссылку на удаляемый вопрос из массива вопросов, связанных с тегом.
+      { $pull: { questions: questionId } }
+    );
+
+    revalidatePath(path);
+  } catch (error) {
+    console.log(error);
+  }
 }
 
 export async function getQuestionById(params: GetQuestionByIdParams) {
@@ -212,5 +243,30 @@ export async function downvoteQuestion(params: QuestionVoteParams) {
   } catch (error) {
     console.log(error);
     throw error;
+  }
+}
+
+export async function editQuestion(params: EditQuestionParams) {
+  try {
+    connectToDatabase();
+
+    const { questionId, title, content, path } = params;
+
+    const question = await Question.findById(questionId).populate("tags");
+
+    if (!question) {
+      throw new Error("Question not found");
+    }
+
+    // Обновили поля в Модели
+    question.title = title;
+    question.content = content;
+
+    // Сохраняем Модель
+    await question.save();
+
+    revalidatePath(path);
+  } catch (error) {
+    console.log(error);
   }
 }

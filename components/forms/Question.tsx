@@ -23,19 +23,20 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "../ui/badge";
 
 import { QuestionsSchema } from "@/lib/validations";
-import { createQuestion } from "@/lib/actions/question.action";
+import { createQuestion, editQuestion } from "@/lib/actions/question.action";
 import { useRouter, usePathname } from "next/navigation";
 import { useTheme } from "@/context/ThemeProvider";
 
-/* Кнопка в форме может выступать как в роли "create" так и "edit"
+/* type - Кнопка в форме может выступать как в роли "create" так и "edit"
 поэтому ниже в Button мы динамически меняям названия  */
-const type: any = "create";
 
 interface Props {
+  type?: string;
   mongoUserId: string;
+  questionDetails?: string;
 }
 
-const Question = ({ mongoUserId }: Props) => {
+const Question = ({ type, mongoUserId, questionDetails }: Props) => {
   // Привязка tinymce Editor
   const editorRef = useRef(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -45,16 +46,26 @@ const Question = ({ mongoUserId }: Props) => {
 
   const { mode } = useTheme();
 
+  // Данные для вставки в Форму Редактирования (загрузили их в questions/edit)
+  const parsedQuestionDetails = JSON.parse(questionDetails || "");
+
+  const groupedTags = parsedQuestionDetails.tags.map((tag) => tag.name);
+  //
+
   // 1. Define your form.
   const form = useForm<z.z.infer<typeof QuestionsSchema>>({
     resolver: zodResolver(QuestionsSchema),
+    // Благодаря hook-form можем сразу отобразить данные для редактирования
+    //
     defaultValues: {
-      title: "",
-      explanation: "",
-      tags: [],
+      title: parsedQuestionDetails.title || "",
+      explanation: parsedQuestionDetails.content || "",
+      tags: groupedTags || [],
     },
   });
 
+  //
+  //
   // 2. Define a Submit Handler!
   async function onSubmit(values: z.infer<typeof QuestionsSchema>) {
     // Предотвращает повторное нажатие на Submit button
@@ -64,22 +75,29 @@ const Question = ({ mongoUserId }: Props) => {
     // just to check values
     console.log(values);
 
-    // Обработка данных
+    // Обработка данных Редактируем или Создаём Новое
     try {
-      // make an async call to your API -> to Create a Question
-      // contain all form data
-      // reset the form and Navigate to Home
+      if (type === "Edit") {
+        await editQuestion({
+          questionId: parsedQuestionDetails._id,
+          title: values.title,
+          content: values.explanation,
+          path: pathname,
+        });
 
-      await createQuestion({
-        title: values.title,
-        content: values.explanation,
-        tags: values.tags,
-        author: JSON.parse(mongoUserId),
-        path: pathname,
-      });
+        // Переходим на Отредактированный Вопрос
+        router.push(`/question/${parsedQuestionDetails._id}`);
+      } else {
+        await createQuestion({
+          title: values.title,
+          content: values.explanation,
+          tags: values.tags,
+          author: JSON.parse(mongoUserId),
+          path: pathname,
+        });
 
-      // navigate to home page
-      router.push("/");
+        router.push("/");
+      }
     } catch (error) {
     } finally {
       setIsSubmitting(false);
@@ -176,7 +194,8 @@ const Question = ({ mongoUserId }: Props) => {
                     // @ts-ignore
                     (editorRef.current = editor)
                   }
-                  initialValue=""
+                  // Подгрузка данных в Editor если хотим редактировать
+                  initialValue={parsedQuestionDetails.content || ""}
                   // onBlur - to save when user out click the editor
                   onBlur={field.onBlur}
                   // относиться к библиотеке Editor позволяет записывать значения
@@ -232,6 +251,8 @@ const Question = ({ mongoUserId }: Props) => {
                 {/* Needed Fragment */}
                 <>
                   <Input
+                    // ТЕГИ НЕ РЕДАКТИРУЮТСЯ! МОЖНО ТОЛЬКО УДАЛИТЬ
+                    disabled={type === "Edit"}
                     className="no-focus paragraph-regular background-light900_dark300 light-border-2 text-dark300_light700 min-h-[56px] border"
                     placeholder="Add tags..."
                     // удаляем {...field} чтобы вручную обрабатывать входные данные
@@ -243,16 +264,22 @@ const Question = ({ mongoUserId }: Props) => {
                         <Badge
                           key={tag}
                           className="subtle-medium background-light800_dark300 text-light400_light500 flex items-center justify-center gap-2 rounded-md border-none px-4 py-2 capitalize"
-                          onClick={() => handleTagRemove(tag, field)}
+                          onClick={() =>
+                            type !== "Edit"
+                              ? handleTagRemove(tag, field)
+                              : () => {}
+                          }
                         >
                           {tag}
-                          <Image
-                            src="/assets/icons/close.svg"
-                            alt="Close icon"
-                            width={12}
-                            height={12}
-                            className="cursor-pointer object-contain invert-0 dark:invert"
-                          />
+                          {type !== "Edit" && (
+                            <Image
+                              src="/assets/icons/close.svg"
+                              alt="Close icon"
+                              width={12}
+                              height={12}
+                              className="cursor-pointer object-contain invert-0 dark:invert"
+                            />
+                          )}
                         </Badge>
                       ))}
                     </div>
@@ -274,9 +301,9 @@ const Question = ({ mongoUserId }: Props) => {
           disabled={isSubmitting}
         >
           {isSubmitting ? (
-            <>{type === "edit" ? "Editing..." : "Posting..."}</>
+            <>{type === "Edit" ? "Editing..." : "Posting..."}</>
           ) : (
-            <>{type === "edit" ? "Edit Question" : "Ask a Question"}</>
+            <>{type === "Edit" ? "Edit Question" : "Ask a Question"}</>
           )}
         </Button>
       </form>
