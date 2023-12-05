@@ -66,7 +66,7 @@ export async function createQuestion(params: CreateQuestionParams) {
         { name: { $regex: new RegExp(`^${tag}$`, "i") } },
         // Добавляем id вопроса к определенному Тегу
         // делая обратную связь по которой можно будет выбирать все вопросы по Тегу
-        { $setOnInsert: { name: tag }, $push: { question: question._id } },
+        { $setOnInsert: { name: tag }, $push: { questions: question._id } },
         // upsert: true указывает, что если не найден существующий тег, то будет создан новый. new: true говорит, что при создании нового документа будет возвращена обновленная версия документа.
         { upsert: true, new: true }
       );
