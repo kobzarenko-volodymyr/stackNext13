@@ -33,15 +33,15 @@ const Page = async ({ params, searchParams }: URLProps) => {
         {result.questions.length > 0 ? (
           result.questions.map((question: IQuestion) => (
             <QuestionCard
-            key={question._id}
-            _id={question._id}
-            title={question.title}
-            tags={question.tags}
-            author={question.author}
-            upvotes={question.upvotes}
-            views={question.views}
-            answers={question.answers}
-            createdAt={question.createdAt}
+              key={question._id}
+              _id={question._id}
+              title={question.title}
+              tags={question.tags}
+              author={question.author}
+              upvotes={question.upvotes}
+              views={question.views}
+              answers={question.answers}
+              createdAt={question.createdAt}
             />
           ))
         ) : (
