@@ -15,10 +15,25 @@ import User from "@/database/user.model";
 import { revalidatePath } from "next/cache";
 import Answer from "@/database/answer.model";
 import Interaction from "@/database/interaction.model";
+import { FilterQuery } from "mongoose";
 
 export async function getQuestions(params: GetQuestionsParams) {
   try {
     connectToDatabase();
+
+    // searchQuery - из Home page
+    const { searchQuery } = params;
+
+    const query: FilterQuery<typeof Question> = {};
+
+    // поле title, либо поле content соответствуют строке, заданной переменной searchQuery
+    if (searchQuery) {
+      // $or - указывает, что искать документы, в которых выполняется хотя бы одно из условий, перечисленных в массиве.
+      query.$or = [
+        { title: { $regex: new RegExp(searchQuery, "i") } },
+        { content: { $regex: new RegExp(searchQuery, "i") } },
+      ];
+    }
 
     /* "populate", которая заполняет поле "tags" в каждом найденном вопросе. 
     Она связывает поле "tags" вопроса с коллекцией "Tag" 
@@ -26,8 +41,10 @@ export async function getQuestions(params: GetQuestionsParams) {
     для коллекции тегов.
 
     Потому что в Базе связи выполнены как id, а нам нужны данные 
+
+    query наш подготовленный запрос к Базе
     */
-    const questions = await Question.find({})
+    const questions = await Question.find(query)
       .populate({ path: "tags", model: Tag })
       .populate({ path: "author", model: User })
       .sort({ createdAt: -1 });

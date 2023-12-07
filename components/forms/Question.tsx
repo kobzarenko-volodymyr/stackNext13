@@ -47,9 +47,10 @@ const Question = ({ type, mongoUserId, questionDetails }: Props) => {
   const { mode } = useTheme();
 
   // Данные для вставки в Форму Редактирования (загрузили их в questions/edit)
-  const parsedQuestionDetails = JSON.parse(questionDetails || "");
+  const parsedQuestionDetails =
+    questionDetails && JSON.parse(questionDetails || "");
 
-  const groupedTags = parsedQuestionDetails.tags.map((tag) => tag.name);
+  const groupedTags = parsedQuestionDetails?.tags.map((tag) => tag.name);
   //
 
   // 1. Define your form.
@@ -58,8 +59,8 @@ const Question = ({ type, mongoUserId, questionDetails }: Props) => {
     // Благодаря hook-form можем сразу отобразить данные для редактирования
     //
     defaultValues: {
-      title: parsedQuestionDetails.title || "",
-      explanation: parsedQuestionDetails.content || "",
+      title: parsedQuestionDetails?.title || "",
+      explanation: parsedQuestionDetails?.content || "",
       tags: groupedTags || [],
     },
   });
@@ -195,7 +196,7 @@ const Question = ({ type, mongoUserId, questionDetails }: Props) => {
                     (editorRef.current = editor)
                   }
                   // Подгрузка данных в Editor если хотим редактировать
-                  initialValue={parsedQuestionDetails.content || ""}
+                  initialValue={parsedQuestionDetails?.content || ""}
                   // onBlur - to save when user out click the editor
                   onBlur={field.onBlur}
                   // относиться к библиотеке Editor позволяет записывать значения

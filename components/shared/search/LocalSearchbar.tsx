@@ -1,8 +1,11 @@
 "use client";
 
 import { Input } from "@/components/ui/input";
+import { formUrlQuery, removeKeysFromQuery } from "@/lib/utils";
 import Image from "next/image";
-import React from "react";
+import { usePathname, useSearchParams, useRouter } from "next/navigation";
+import router from "next/router";
+import React, { useEffect, useState } from "react";
 
 interface CustomInputProps {
   route: string;
@@ -19,6 +22,54 @@ const LocalSearchbar = ({
   placeholder,
   otherClasses,
 }: CustomInputProps) => {
+  const router = useRouter();
+  // что бы знать на каком URL мы в данный момент
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
+  // можем брать из URL, то что нужно ?q=value&next=update&page=1 ...
+  const query = searchParams.get("q");
+
+  const [search, setSearch] = useState(query || "");
+
+  useEffect(() => {
+    // Чтобы не делать запрос к базе каждую секунду делаем отложенный вызов
+    const delayDebounceFn = setTimeout(() => {
+      if (search) {
+        const newUrl = formUrlQuery({
+          // дублируем уже существующие параметры, чтобы случайно не затереть их
+          params: searchParams.toString(),
+          // добавляем в URL нужные нам параметры
+          key: "q",
+          value: search,
+        });
+
+        // Вставляем новый URL
+        // scroll: false указывает маршрутизатору не прокручивать страницу к верху после перехода на новый URL
+        router.push(newUrl, { scroll: false });
+        //
+      } else {
+        console.log(route, pathname);
+        // ВАЖНО!
+        // Проверка если текущий URL браузера === Текущему роуту Некста!!!!
+        if (pathname === route) {
+          // функция для очистки праметров URL, чтобы чистить (q=value)
+          const newUrl = removeKeysFromQuery({
+            params: searchParams.toString(),
+            keysToRemove: ["q"],
+          });
+
+          // Вставляем новый URL
+          router.push(newUrl, { scroll: false });
+        }
+      }
+    }, 300);
+
+    // clean-up функция в UseEffect которая вызывается при Unmount-е компонента!
+    // в данном случае сбрасываем счетчик
+    return () => clearTimeout(delayDebounceFn);
+  }, [search, route, pathname, router, searchParams, query]);
+
   return (
     <div
       className={`background-light800_darkgradient flex min-h-[56px] grow items-center gap-4 rounded-[10px] px-4 ${otherClasses}`}
@@ -36,8 +87,8 @@ const LocalSearchbar = ({
       <Input
         type="text"
         placeholder={placeholder}
-        value=""
-        onChange={() => {}}
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
         className="paragraph-regular no-focus placeholder background-light800_darkgradient border-none shadow-none outline-none"
       />
 

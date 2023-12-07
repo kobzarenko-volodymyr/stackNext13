@@ -1,6 +1,9 @@
 import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
 
+// Лучше через Доку! (это либа занимает место и не работает норм с тестами)
+import qs from "query-string";
+
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
@@ -62,4 +65,58 @@ export const getJoinedDate = (date: Date): string => {
   const joinedDate = `${month} ${year}`;
 
   return joinedDate;
+};
+
+interface UrlQueryParams {
+  params: string;
+  key: string;
+  value: string | null;
+}
+
+// Нужно попробывать через Доку!
+
+// https://nextjs.org/learn/dashboard-app/adding-search-and-pagination
+
+// ФОРМИРУЕМ НОВЫЙ URL
+export const formUrlQuery = ({ params, key, value }: UrlQueryParams) => {
+  const currentUrl = qs.parse(params);
+
+  // В Общем текущем URL Переназначили значение value передав его по ключу!
+  currentUrl[key] = value;
+
+  return qs.stringifyUrl(
+    {
+      // base pathname! http://www....
+      url: window.location.pathname,
+      // another part of URL
+      query: currentUrl,
+    },
+    // это Опции! Указыаем что нам не нужны пустые параметры!
+    { skipNull: true }
+  );
+};
+
+interface RemoveUrlQueryParams {
+  params: string;
+  keysToRemove: string[];
+}
+
+export const removeKeysFromQuery = ({
+  params,
+  keysToRemove,
+}: RemoveUrlQueryParams) => {
+  const currentUrl = qs.parse(params);
+
+  // удаляем все переданные ключи из текущего URL
+  keysToRemove.forEach((key) => {
+    delete currentUrl[key];
+  });
+
+  return qs.stringifyUrl(
+    {
+      url: window.location.pathname,
+      query: currentUrl,
+    },
+    { skipNull: true }
+  );
 };

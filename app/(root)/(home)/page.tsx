@@ -6,10 +6,16 @@ import LocalSearchbar from "@/components/shared/search/LocalSearchbar";
 import { Button } from "@/components/ui/button";
 import { HomePageFilters } from "@/constants/filters";
 import { getQuestions } from "@/lib/actions/question.action";
+import { SearchParamsProps } from "@/types";
 import Link from "next/link";
 
-export default async function Home() {
-  const result = await getQuestions({});
+export default async function Home({ searchParams }: SearchParamsProps) {
+  /* Мы не используем глобальный стейт менеджер! мы берём параметры из URL
+  на данной странице и передаём их сразу в Sever Action который делает запрос 
+  к базе учитывая данные из URL */
+  const result = await getQuestions({
+    searchQuery: searchParams.q,
+  });
 
   return (
     <>
