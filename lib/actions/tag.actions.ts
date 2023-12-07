@@ -95,3 +95,26 @@ export async function getQuestionsByTagId(params: GetQuestionsByTagIdParams) {
     throw error;
   }
 }
+
+// Берем 5 Тегов у которых самое большое количество Вопросов
+export async function getTopPopularTags() {
+  try {
+    connectToDatabase();
+
+    // aggregate метод позволяет выполнять преобразования в нужный нам вид.
+    const popularTags = await Tag.aggregate([
+      // Оператор $project позволяет выбирать только определенные поля для вывода.
+      // добавили новую переменную tag.numberOfQuestions - будет содержать
+      // количество элементов в массиве questions для каждого тега.
+      // поле questions в Моделе!
+      { $project: { name: 1, numberOfQuestions: { $size: "$questions" } } },
+      { $sort: { numberOfQuestions: -1 } },
+      { $limit: 5 },
+    ]);
+
+    return popularTags;
+  } catch (error) {
+    console.log(error);
+    throw error;
+  }
+}
