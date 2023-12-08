@@ -98,6 +98,7 @@ const Page = async ({ params, searchParams }: URLProps) => {
             </TabsTrigger>
           </TabsList>
           <TabsContent value="top-posts">
+            {/* Pagination inside */}
             <QuestionTab
               searchParams={searchParams}
               userId={userInfo.user._id}
@@ -105,6 +106,7 @@ const Page = async ({ params, searchParams }: URLProps) => {
             />
           </TabsContent>
           <TabsContent value="answers" className="flex w-full flex-col gap-6">
+            {/* Pagination inside */}
             <AnswersTab
               searchParams={searchParams}
               userId={userInfo.user._id}

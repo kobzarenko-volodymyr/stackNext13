@@ -17,13 +17,16 @@ import Answer from "@/database/answer.model";
 import Interaction from "@/database/interaction.model";
 import { FilterQuery } from "mongoose";
 
-// У нас Комбинируется Поиск и Фильтрация!!!!!
+// У нас Комбинируется Поиск и Фильтрация + Пагинация!!!!!
 export async function getQuestions(params: GetQuestionsParams) {
   try {
     connectToDatabase();
 
     // параметры переданные из Home page
-    const { searchQuery, filter } = params;
+    const { searchQuery, filter, page = 1, pageSize = 10 } = params;
+
+    // Рассчитать количество ПОСТОВ! для Пропуска на основе номера страницы и размера страницы.
+    const skipAmount = (page - 1) * pageSize;
 
     const query: FilterQuery<typeof Question> = {};
 
@@ -68,10 +71,25 @@ export async function getQuestions(params: GetQuestionsParams) {
     const questions = await Question.find(query)
       .populate({ path: "tags", model: Tag })
       .populate({ path: "author", model: User })
+      // Пагинация!
+      // Количество ПОСТОВ, которые нужно пропустить перед началом выборки.
+      .skip(skipAmount)
+      // Ограничивает количество документов, которые будут возвращены, в данном случае
+      .limit(pageSize)
       // обработанные данные для сортировки
       .sort(sortOptions);
 
-    return { questions };
+    // подсчитали общее количество Вопросов через mongoose countDocuments
+    const totalQuestions = await Question.countDocuments(query);
+
+    // пропс для UI кнопки (если Общее число Вопросов всё еще больше
+    // того, что мы Сейчас отобразили пользователю)
+    // questions.length - что показали на отдельной странице
+    // skipAmount - сколько мы уже пропустили
+    // 101 => (4 * 20) + 20 = 100 -->  101 = true  100 = false  4 по 20 уже пропустили
+    const isNext = totalQuestions > skipAmount + questions.length;
+
+    return { questions, isNext };
   } catch (error) {
     console.log(error);
     throw error;

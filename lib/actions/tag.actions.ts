@@ -39,7 +39,11 @@ export async function getAllTags(params: GetAllTagsParams) {
   try {
     connectToDatabase();
 
-    const { searchQuery, filter } = params;
+    // pageSize = сколько Тегов на 1 страницу
+    const { searchQuery, filter, page = 1, pageSize = 10 } = params;
+
+    // сколько Тегов пропустить учитывая сколько мы уже показали на предыдущих стр.
+    const skipAmount = (page - 1) * pageSize;
 
     const query: FilterQuery<typeof Tag> = {};
 
@@ -67,9 +71,16 @@ export async function getAllTags(params: GetAllTagsParams) {
         break;
     }
 
-    const tags = await Tag.find(query).sort(sortOptions);
+    const totalTags = await Tag.countDocuments(query);
 
-    return { tags };
+    const tags = await Tag.find(query)
+      .sort(sortOptions)
+      .skip(skipAmount)
+      .limit(pageSize);
+
+    const isNext = totalTags > skipAmount + tags.length;
+
+    return { tags, isNext };
   } catch (error) {
     console.log(error);
     throw error;
@@ -81,6 +92,7 @@ export async function getQuestionsByTagId(params: GetQuestionsByTagIdParams) {
     connectToDatabase();
 
     const { tagId, page = 1, pageSize = 10, searchQuery } = params;
+    const skipAmount = (page - 1) * pageSize;
 
     // Создание фильтра для поиска определенного тега по его _id
     // Фильтр где _id равен tagId.
@@ -100,6 +112,8 @@ export async function getQuestionsByTagId(params: GetQuestionsByTagIdParams) {
         : {},
       options: {
         sort: { createdAt: -1 },
+        skip: skipAmount,
+        limit: pageSize + 1, // +1 to check if there is next page
       },
       // заполнение (populate) связанных данных. В данном случае, заполняются теги и авторы, связанные с каждым вопросом.
       populate: [
@@ -112,12 +126,13 @@ export async function getQuestionsByTagId(params: GetQuestionsByTagIdParams) {
       throw new Error("Tag not found");
     }
 
-    console.log(tag);
+    const isNext = tag.questions.length > pageSize;
 
     const questions = tag.questions;
+
     //  После выполнения запроса, функция возвращает
     // название тега (tag.name) и связанные с ним вопросы
-    return { tagTitle: tag.name, questions };
+    return { tagTitle: tag.name, questions, isNext };
     //
   } catch (error) {
     console.log(error);
