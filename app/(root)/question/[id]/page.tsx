@@ -108,11 +108,11 @@ const Page = async ({ params, searchParams }) => {
       </div>
 
       <AllAnswers
-        // do not stringify! it shoud be SchemaId
         questionId={result._id}
         userId={mongoUser._id}
-        //
         totalAnswers={result.answers.length}
+        page={searchParams?.page}
+        filter={searchParams?.filter}
       />
 
       <Answer

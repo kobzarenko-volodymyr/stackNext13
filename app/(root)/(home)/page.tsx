@@ -9,12 +9,24 @@ import { getQuestions } from "@/lib/actions/question.action";
 import { SearchParamsProps } from "@/types";
 import Link from "next/link";
 
+/* ЛОГИКА! В Home мы принимаем параметры из URL и вызываем запрос к Базе. 
+  У Home есть Filter внутри которого в зависмости от выбора UI меняется 
+  Общий URL. После Обновления URL у в Home заново выполняется запрос к Базе
+  на основании новых параметров из URL. searchParams.q или searchParams.filter
+  */
+
+// searchParams - является значениями которые страница берёт Сама!!!
 export default async function Home({ searchParams }: SearchParamsProps) {
   /* Мы не используем глобальный стейт менеджер! мы берём параметры из URL
   на данной странице и передаём их сразу в Sever Action который делает запрос 
   к базе учитывая данные из URL */
+
+  // Вся обработка в question.actions
   const result = await getQuestions({
+    // из LocalSearchbar
     searchQuery: searchParams.q,
+    // из HomePageFilters
+    filter: searchParams.filter,
   });
 
   return (

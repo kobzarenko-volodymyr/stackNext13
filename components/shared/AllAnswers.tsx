@@ -13,7 +13,7 @@ interface Props {
   userId: string;
   totalAnswers: number;
   page?: number;
-  filter?: number;
+  filter?: string;
 }
 
 const AllAnswers = async ({
@@ -23,8 +23,12 @@ const AllAnswers = async ({
   page,
   filter,
 }: Props) => {
+  // Запрос к БД
   const result = await getAnswers({
     questionId,
+    // +page - convert to Number
+    page: page ? +page : 1,
+    sortBy: filter,
   });
 
   return (

@@ -17,15 +17,17 @@ import Answer from "@/database/answer.model";
 import Interaction from "@/database/interaction.model";
 import { FilterQuery } from "mongoose";
 
+// У нас Комбинируется Поиск и Фильтрация!!!!!
 export async function getQuestions(params: GetQuestionsParams) {
   try {
     connectToDatabase();
 
-    // searchQuery - из Home page
-    const { searchQuery } = params;
+    // параметры переданные из Home page
+    const { searchQuery, filter } = params;
 
     const query: FilterQuery<typeof Question> = {};
 
+    // QUERY ДЛЯ LocalSearchbar
     // поле title, либо поле content соответствуют строке, заданной переменной searchQuery
     if (searchQuery) {
       // $or - указывает, что искать документы, в которых выполняется хотя бы одно из условий, перечисленных в массиве.
@@ -33,6 +35,25 @@ export async function getQuestions(params: GetQuestionsParams) {
         { title: { $regex: new RegExp(searchQuery, "i") } },
         { content: { $regex: new RegExp(searchQuery, "i") } },
       ];
+    }
+
+    // Обработка для поля .sort() из HomePageFilters
+    let sortOptions = {};
+
+    switch (filter) {
+      case "newest":
+        // устанавливается опция сортировки по полю createdAt в порядке убывания
+        sortOptions = { createdAt: -1 };
+        break;
+      case "frequent":
+        sortOptions = { views: -1 };
+        break;
+      case "unanswered":
+        //  поле answers должно иметь размер равный 0,
+        query.answers = { $size: 0 };
+        break;
+      default:
+        break;
     }
 
     /* "populate", которая заполняет поле "tags" в каждом найденном вопросе. 
@@ -47,7 +68,8 @@ export async function getQuestions(params: GetQuestionsParams) {
     const questions = await Question.find(query)
       .populate({ path: "tags", model: Tag })
       .populate({ path: "author", model: User })
-      .sort({ createdAt: -1 });
+      // обработанные данные для сортировки
+      .sort(sortOptions);
 
     return { questions };
   } catch (error) {

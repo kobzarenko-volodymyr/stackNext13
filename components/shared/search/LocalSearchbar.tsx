@@ -1,11 +1,10 @@
 "use client";
 
 import { Input } from "@/components/ui/input";
-import { formUrlQuery, removeKeysFromQuery } from "@/lib/utils";
 import Image from "next/image";
-import { usePathname, useSearchParams, useRouter } from "next/navigation";
-import router from "next/router";
 import React, { useEffect, useState } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { formUrlQuery, removeKeysFromQuery } from "@/lib/utils";
 
 interface CustomInputProps {
   route: string;
@@ -22,9 +21,11 @@ const LocalSearchbar = ({
   placeholder,
   otherClasses,
 }: CustomInputProps) => {
+  // Роут Некста!
   const router = useRouter();
-  // что бы знать на каком URL мы в данный момент
+  // что бы знать на каком URL в Браузере мы в данный момент
   const pathname = usePathname();
+  // берём значения после "?" в URL
   const searchParams = useSearchParams();
 
   // можем брать из URL, то что нужно ?q=value&next=update&page=1 ...
