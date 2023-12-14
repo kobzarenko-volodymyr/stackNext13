@@ -14,7 +14,7 @@ import React from "react";
 
 // searchParams - из коробки NextJS (filter, query)
 // params - id, url
-const Page = async ({ params, searchParams }) => {
+const Page = async ({ params, searchParams }: any) => {
   //
   // значение id из URL (Нашего Вопроса!)
   const result = await getQuestionById({ questionId: params.id });
