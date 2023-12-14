@@ -6,9 +6,20 @@ import Pagination from "@/components/shared/Pagination";
 import LocalSearchbar from "@/components/shared/search/LocalSearchbar";
 import { Button } from "@/components/ui/button";
 import { HomePageFilters } from "@/constants/filters";
-import { getQuestions } from "@/lib/actions/question.action";
+import {
+  getQuestions,
+  getRecommendedQuestions,
+} from "@/lib/actions/question.action";
 import { SearchParamsProps } from "@/types";
 import Link from "next/link";
+import { auth } from "@clerk/nextjs";
+
+// META Данные для ссылки
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Home | Dev Overflow",
+};
 
 /* ЛОГИКА! В Home мы принимаем параметры из URL и вызываем запрос к Базе. 
   У Home есть Filter внутри которого в зависмости от выбора UI меняется 
@@ -22,15 +33,34 @@ export default async function Home({ searchParams }: SearchParamsProps) {
   на данной странице и передаём их сразу в Sever Action который делает запрос 
   к базе учитывая данные из URL */
 
-  // Вся обработка в question.actions
-  const result = await getQuestions({
-    // в LocalSearchbar
-    searchQuery: searchParams.q,
-    // в HomePageFilters
-    filter: searchParams.filter,
-    // для Пагинации
-    page: searchParams.page ? +searchParams.page : 1,
-  });
+  const { userId } = auth();
+
+  let result;
+
+  if (searchParams?.filter === "recommended") {
+    if (userId) {
+      result = await getRecommendedQuestions({
+        userId,
+        searchQuery: searchParams.q,
+        page: searchParams.page ? +searchParams.page : 1,
+      });
+    } else {
+      result = {
+        questions: [],
+        isNext: false,
+      };
+    }
+  } else {
+    // Вся обработка в question.actions
+    result = await getQuestions({
+      // в LocalSearchbar
+      searchQuery: searchParams.q,
+      // в HomePageFilters
+      filter: searchParams.filter,
+      // для Пагинации
+      page: searchParams.page ? +searchParams.page : 1,
+    });
+  }
 
   return (
     <>

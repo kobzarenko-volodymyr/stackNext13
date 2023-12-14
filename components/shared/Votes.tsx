@@ -11,6 +11,7 @@ import { formatAndDivideNumber } from "@/lib/utils";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect } from "react";
+import { toast } from "../ui/use-toast";
 
 interface Props {
   type: string;
@@ -42,13 +43,24 @@ const Votes = ({
       questionId: JSON.parse(itemId),
       path: pathname,
     });
+
+    // Toast оповещение!
+    return toast({
+      title: `Question ${
+        !hasSaved ? "Saved in" : "Removed from"
+      } your collection`,
+      variant: !hasSaved ? "default" : "destructive",
+    });
   };
 
   const handleVote = async (action: string) => {
     //
     // can't vote if User doesn't signed up
     if (!userId) {
-      return;
+      return toast({
+        title: "Please log in",
+        description: "You must be logged in to perform this action",
+      });
     }
 
     // Внутри обрабатываем разные типы Голосовалок для Вопроса и Ответа
@@ -76,8 +88,10 @@ const Votes = ({
         });
       }
 
-      // todo: show a toast
-      return;
+      return toast({
+        title: `Upvote ${!hasupVoted ? "Successful" : "Removed"}`,
+        variant: !hasupVoted ? "default" : "destructive",
+      });
     }
 
     // IF for downvote
@@ -100,7 +114,10 @@ const Votes = ({
         });
       }
 
-      // todo: show a toast
+      return toast({
+        title: `Downvote ${!hasupVoted ? "Successful" : "Removed"}`,
+        variant: !hasupVoted ? "default" : "destructive",
+      });
     }
   };
 

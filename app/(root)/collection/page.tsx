@@ -8,24 +8,6 @@ import { getSavedQuestions } from "@/lib/actions/user.action";
 import { SearchParamsProps } from "@/types";
 import { auth } from "@clerk/nextjs";
 
-interface QuestionProps {
-  _id: string;
-  title: string;
-  tags: {
-    _id: string;
-    name: string;
-  }[];
-  author: {
-    _id: string;
-    name: string;
-    picture: string;
-  };
-  upvotes: number;
-  views: number;
-  answers: Array<object>;
-  createdAt: Date;
-}
-
 export default async function Home({ searchParams }: SearchParamsProps) {
   const { userId } = auth();
 
@@ -60,7 +42,7 @@ export default async function Home({ searchParams }: SearchParamsProps) {
 
       <div className="mt-10 flex w-full flex-col gap-6">
         {result.questions.length > 0 ? (
-          result.questions.map((question: QuestionProps) => (
+          result.questions.map((question: any) => (
             <QuestionCard
               key={question._id}
               _id={question._id}
