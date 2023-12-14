@@ -3,6 +3,8 @@ import { twMerge } from "tailwind-merge";
 
 // Лучше через Доку! (это либа занимает место и не работает норм с тестами)
 import qs from "query-string";
+import { BADGE_CRITERIA } from "@/constants";
+import { BadgeCounts } from "@/types";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -119,4 +121,35 @@ export const removeKeysFromQuery = ({
     },
     { skipNull: true }
   );
+};
+
+interface BadgeParam {
+  criteria: {
+    type: keyof typeof BADGE_CRITERIA;
+    count: number;
+  }[];
+}
+
+export const assignBadges = (params: BadgeParam) => {
+  const badgeCounts: BadgeCounts = {
+    GOLD: 0,
+    SILVER: 0,
+    BRONZE: 0,
+  };
+
+  const { criteria } = params;
+
+  criteria.forEach((item) => {
+    const { type, count } = item;
+    const badgeLevels: any = BADGE_CRITERIA[type];
+
+    // level - BRONZE, SILVER, GOLD
+    Object.keys(badgeLevels).forEach((level: any) => {
+      if (count >= badgeLevels[level]) {
+        badgeCounts[level as keyof BadgeCounts] += 1;
+      }
+    });
+  });
+
+  return badgeCounts;
 };

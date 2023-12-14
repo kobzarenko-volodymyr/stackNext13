@@ -17,6 +17,8 @@ import Question from "@/database/question.model";
 import Tag from "@/database/tag.model";
 import { FilterQuery } from "mongoose";
 import Answer from "@/database/answer.model";
+import { BadgeCriteriaType } from "@/types";
+import { assignBadges } from "../utils";
 
 export async function getUserById(params: any) {
   try {
@@ -269,11 +271,87 @@ export async function getUserInfo(params: GetUserByIdParams) {
     const totalQuestions = await Question.countDocuments({ author: user._id });
     const totalAnswers = await Answer.countDocuments({ author: user._id });
 
+    // aggregate - работает примерно как .reduce() в JS. Отдаёт результат после вычислений
+    // aggregate - возвращает Array и мы его сразу деструктурируем [questionUpvotes]
+    // вычисляет суммарное количество голосов "upvotes" для вопросов, созданных пользователем (user._id)
+    const [questionUpvotes] = await Question.aggregate([
+      { $match: { author: user._id } },
+      /* $project создаёт новый объект с полями, указанными внутри оператора $project. 
+      В данном случае, он создает поле upvotes, содержащее количество элементов 
+      в массиве upvotes каждого документа. _id: 0 означает, что поле _id 
+      не будет включено в итоговый результат. */
+      {
+        $project: {
+          _id: 0,
+          upvotes: { $size: "$upvotes" },
+        },
+      },
+      /* $group используется для группировки всех документов, прошедших через предыдущие 
+      этапы, в единственный документ. В данном случае, он создает новое поле totalUpvotes, 
+      суммируя все значения upvotes, полученные на предыдущем этапе. "_id": null 
+      говорит о том, что все документы группируются в одну общую группу, 
+      а не по какому-либо конкретному полю.
+       */
+      {
+        $group: {
+          _id: null,
+          totalUpvotes: { $sum: "$upvotes" },
+        },
+      },
+    ]);
+
+    const [answerUpvotes] = await Answer.aggregate([
+      { $match: { author: user._id } },
+      {
+        $project: {
+          _id: 0,
+          upvotes: { $size: "$upvotes" },
+        },
+      },
+      {
+        $group: {
+          _id: null,
+          totalUpvotes: { $sum: "$upvotes" },
+        },
+      },
+    ]);
+
+    const [questionViews] = await Answer.aggregate([
+      { $match: { author: user._id } },
+      {
+        $group: {
+          _id: null,
+          totalViews: { $sum: "$views" },
+        },
+      },
+    ]);
+
+    const criteria = [
+      { type: "QUESTION_COUNT" as BadgeCriteriaType, count: totalQuestions },
+      { type: "ANSWER_COUNT" as BadgeCriteriaType, count: totalAnswers },
+      {
+        type: "QUESTION_UPVOTES" as BadgeCriteriaType,
+        count: questionUpvotes?.totalUpvotes || 0,
+      },
+      {
+        type: "ANSWER_UPVOTES" as BadgeCriteriaType,
+        count: answerUpvotes?.totalUpvotes || 0,
+      },
+      {
+        type: "TOTAL_VIEWS" as BadgeCriteriaType,
+        count: questionViews?.totalViews || 0,
+      },
+    ];
+
+    const badgeCounts = assignBadges({ criteria });
+
     // Возвращаем для отрисовки
     return {
       user,
       totalQuestions,
       totalAnswers,
+      badgeCounts,
+      reputation: user.reputation,
     };
   } catch (error) {
     console.log(error);

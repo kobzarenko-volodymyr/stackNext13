@@ -8,9 +8,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 import React from "react";
 import { getJoinedDate } from "@/lib/utils";
+import ProfileLink from "@/components/shared/ProfileLink";
 import Stats from "@/components/shared/Stats";
 import QuestionTab from "@/components/shared/QuestionTab";
-import ProfileLink from "@/components/shared/ProfileLink";
 import AnswersTab from "@/components/shared/AnswersTab";
 
 const Page = async ({ params, searchParams }: URLProps) => {
@@ -83,8 +83,10 @@ const Page = async ({ params, searchParams }: URLProps) => {
       </div>
 
       <Stats
+        reputation={userInfo.reputation}
         totalQuestions={userInfo.totalQuestions}
         totalAnswers={userInfo.totalAnswers}
+        badges={userInfo.badgeCounts}
       />
 
       <div className="mt-10 flex gap-10">
