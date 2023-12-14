@@ -15,7 +15,7 @@ import { Editor } from "@tinymce/tinymce-react";
 import { useRef, useState } from "react";
 import { useTheme } from "@/context/ThemeProvider";
 import { Button } from "../ui/button";
-import Image from "next/image";
+// import Image from "next/image";
 import { createAnswer } from "@/lib/actions/answer.action";
 import { usePathname } from "next/navigation";
 
@@ -28,7 +28,7 @@ interface Props {
 const Answer = ({ question, questionId, authorId }: Props) => {
   const pathname = usePathname();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isSubmittingAI, setSetIsSubmittingAI] = useState(false);
+  // const [isSubmittingAI, setSetIsSubmittingAI] = useState(false);
   const { mode } = useTheme();
   // Привязка tinymce Editor
   const editorRef = useRef(null);
@@ -69,40 +69,40 @@ const Answer = ({ question, questionId, authorId }: Props) => {
   };
 
   // AI
-  const generateAIAnswer = async () => {
-    if (!authorId) return;
+  // const generateAIAnswer = async () => {
+  //   if (!authorId) return;
 
-    setSetIsSubmittingAI(true);
+  //   setSetIsSubmittingAI(true);
 
-    try {
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_SERVER_URL}/api/chatgpt`,
-        {
-          method: "POST",
-          body: JSON.stringify({ question }),
-        }
-      );
+  //   try {
+  //     const response = await fetch(
+  //       `${process.env.NEXT_PUBLIC_SERVER_URL}/api/chatgpt`,
+  //       {
+  //         method: "POST",
+  //         body: JSON.stringify({ question }),
+  //       }
+  //     );
 
-      const aiAnswer = await response.json();
+  //     const aiAnswer = await response.json();
 
-      // Convert plain text to HTML format
+  //     // Convert plain text to HTML format
 
-      // заменяем каждую новую линию, Глобально на тег <br />
-      const formattedAnswer = aiAnswer.reply.replace(/\n/g, "<br />");
+  //     // заменяем каждую новую линию, Глобально на тег <br />
+  //     const formattedAnswer = aiAnswer.reply.replace(/\n/g, "<br />");
 
-      // вставляем ответ в наш Editor
-      if (editorRef.current) {
-        const editor = editorRef.current as any;
-        editor.setContent(formattedAnswer);
-      }
+  //     // вставляем ответ в наш Editor
+  //     if (editorRef.current) {
+  //       const editor = editorRef.current as any;
+  //       editor.setContent(formattedAnswer);
+  //     }
 
-      // Toast...
-    } catch (error) {
-      console.log(error);
-    } finally {
-      setSetIsSubmittingAI(false);
-    }
-  };
+  //     // Toast...
+  //   } catch (error) {
+  //     console.log(error);
+  //   } finally {
+  //     setSetIsSubmittingAI(false);
+  //   }
+  // };
 
   return (
     <div>
@@ -111,7 +111,7 @@ const Answer = ({ question, questionId, authorId }: Props) => {
           Write your answer here
         </h4>
 
-        <Button
+        {/* <Button
           className="btn light-border-2 gap-1.5 rounded-md px-4 py-2.5 text-primary-500 shadow-none dark:text-primary-500"
           onClick={generateAIAnswer}
         >
@@ -136,7 +136,7 @@ const Answer = ({ question, questionId, authorId }: Props) => {
               Generate AI Answer
             </>
           )}
-        </Button>
+        </Button> */}
       </div>
 
       <Form {...form}>
